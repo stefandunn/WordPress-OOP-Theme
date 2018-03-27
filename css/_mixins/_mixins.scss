@@ -1,0 +1,31 @@
+@mixin placeholder-color($target, $color){
+	#{$target}::-webkit-input-placeholder{
+		color: $color;
+	}
+	#{$target}::-moz-placeholder{
+		color: $color;
+	}
+	#{$target}:-ms-input-placeholder{
+		color: $color;
+	}
+	#{$target}:-moz-placeholder{
+		color: $color;
+	}
+}
+@mixin autofill-color($target, $color, $textColor){
+	#{$target}:-webkit-autofill{
+		-webkit-text-fill-color: $textColor;
+		-webkit-box-shadow: 0 0 0px 1000px $color inset;
+		transition: background-color 5000s ease-in-out 0s;
+	}
+	#{$target}:-webkit-autofill:hover{
+		-webkit-text-fill-color: $textColor;
+		-webkit-box-shadow: 0 0 0px 1000px $color inset;
+		transition: background-color 5000s ease-in-out 0s;
+	}
+	#{$target}:-webkit-autofill:focus{
+		-webkit-text-fill-color: $textColor;
+		-webkit-box-shadow: 0 0 0px 1000px $color inset;
+		transition: background-color 5000s ease-in-out 0s;
+	}
+}

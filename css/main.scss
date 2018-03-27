@@ -1,0 +1,24 @@
+@import '_mixins/colors';
+@import '_mixins/variables';
+@import '_mixins/animations';
+@import '_mixins/mixins';
+@import '_mixins/common-styles';
+@import '_mixins/forms';
+
+/* Import page SCSS code */
+/* @import '_pages/...'; */
+
+html{
+	font-size: $fontSizeBase;
+}
+
+body{
+	font-size: 1rem;
+	font-family: $bodyFont;
+	font-weight: 300;
+}
+
+h1, h2, h3, h4{
+	font-family: $titleFont;
+	text-transform: uppercase;
+}
