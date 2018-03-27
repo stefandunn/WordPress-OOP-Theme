@@ -3,7 +3,6 @@
 /**
  * Laravel Helpers File
  * Extracted by Anthony Rappa
- * rappa819@gmail.com
  */
 
 
