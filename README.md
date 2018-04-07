@@ -14,4 +14,8 @@
 <ul>
   <li>Access same queried object multiple times without duplicating unnecessary queries</li>
   <li>Compatible with Advanced Custom Fields using <code>thisPage()->gcf($fieldName, $fallback)</code></li>
+  <li>Easy access to page/post attributes eg. <code>thisPage()->title</code>, <code>thisPage()->getFeatureImage('large')</code></li>
+  <li>Modified methods to get header/footer to make it easy for support of SPA and MPAs</li>
+  <li>Many helpful functions to make this easier like: <code>findPermalink($pageProp, $pageAttribute = 'title')</code>, <code>renderPartialPage($page)</code>, <code>currentUrl()</code>, <code>isAjaxRequest()</code></li>
+  <li>Page/Post, Archive and Search classes</li>
 </ul>
