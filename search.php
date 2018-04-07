@@ -7,8 +7,8 @@ Template Name: Search Page
 <div class="page-container small-width center-block">
 	<h1><?= thisPage()->title; ?></h1>
 	<div class="page-intro page-container-inner left">
-		<p class="center normal size-2 black"><?= "{$numberResults} result(s) for search term &quot;<span class=\"bold\">{$keywords}</span>&quot;"; ?></p>
-		<p class="center normal size-1 black italic"><?= "Showing page {$currentPage} of {$totalPages} pages"; ?></p>
+		<p class="center normal size-2 black"><?= search()->totalCount . "result(s) for search term &quot;<span class=\"bold\">" . search()->keywords . "</span>&quot;"; ?></p>
+		<p class="center normal size-1 black italic"><?= "Showing page " . search()->currentPage ." of " . search()->pages . " pages"; ?></p>
 		<?php if (search()->hasResults) { ?>
 		<div id="search-results">
 			<ul id="the-results" class="plain-list list-vertical">
