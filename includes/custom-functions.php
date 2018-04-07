@@ -753,18 +753,6 @@ function imageOrderByDevice($order = 'DESC') : array{
 
 
 /**
- * Returns the device
- * @return string
- */
-function device () : string {
-	if (is_mobile() && !is_tablet()) return 'mobile';
-	if (is_tablet()) return 'tablet';
-
-	return 'desktop';
-}
-
-
-/**
  * Returns a $_GET variable parameter if available, otherwise returns the $fallback value
  * @param  string $variableName
  * @param  mixed $fallback
