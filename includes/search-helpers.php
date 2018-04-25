@@ -14,5 +14,5 @@ function search() {
 		$search = new Search();
 
 	// Return global
-	return $search
+	return $search;
 }
