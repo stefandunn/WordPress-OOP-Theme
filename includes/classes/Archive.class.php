@@ -1,148 +1,155 @@
 <?php
 
+class Archive
+{
 
-Class Archive {
+    public $postType, $name, $permalink, $hasPosts, $hasLeftOvers;
 
-	public $postType, $name, $permalink, $hasPosts, $hasLeftOvers;
+    private $internalOffset = 0;
+    private $posts, $internalOrder, $internalOrderType, $internalPostCount, $internalTotalCount;
 
-	private $internalOffset = 0;
-	private $posts, $internalOrder, $internalOrderType, $internalPostCount, $internalTotalCount;
+    /**
+     * Class constructor
+     * @param string|null $postType
+     */
+    public function __construct(string $postType = null): void
+    {
 
+        global $wp_query;
 
-	/**
-	 * Class constructor
-	 */
-	public function __construct(string $postType = null) {
+        if (is_null($postType)) {
+            $this->postType = (!empty($wp_query->get('post_type'))) ? $wp_query->get('post_type') : $this->determinePostType();
+        } else {
+            $this->postType = $postType;
+        }
 
-		global $wp_query;
+        $this->name      = "{$this->postType}-archive";
+        $this->permalink = get_post_type_archive_link($postType);
 
-		if (is_null($postType))
-			$this->postType = (!empty($wp_query->get('post_type')))? $wp_query->get('post_type') : $this->determinePostType();
-		else
-			$this->postType = $postType;
+        $this->internalTotalCount = count(get_posts([
+            'post_type'      => $this->postType,
+            'posts_per_page' => 100000,
+            'post_status'    => 'publish',
+        ]));
 
-		$this->name = "{$this->postType}-archive";
-		$this->permalink = get_post_type_archive_link($postType);
+        $this->hasLeftOvers = $this->hasPosts = ($this->internalTotalCount > 0);
 
-		$this->internalTotalCount = count(get_posts([
-			'post_type' => $this->postType,
-			'posts_per_page' => 100000,
-			'post_status' => 'publish',
-		]));
+    }
 
-		$this->hasLeftOvers = $this->hasPosts = ($this->internalTotalCount > 0);
+    /**
+     * Determine the post type of archive
+     * @return string|null
+     */
+    private function determinePostType():  ? string
+    {
+        $availablePostTypes = get_post_types();
+        foreach ($availablePostTypes as $postType) {
+            $archiveLink = trim(get_post_type_archive_link($postType), '/') . '/';
+            if ($archiveLink == trim(currentUrl(false), '/') . '/') {
+                return $postType;
+            }
+        }
 
-		return $this;
+        return null;
+    }
 
-	}
+    /**
+     * Get's posts related to this archive
+     * @param  array $arguments
+     * @return array
+     */
+    public function getPosts(array $arguments = [], bool $resetInternalOffset = true) : array
+    {
 
-	private function determinePostType () {
-		$availablePostTypes = get_post_types();
-		foreach ($availablePostTypes as $postType) {
-			$archiveLink = trim(get_post_type_archive_link($postType), '/') . '/';
-			if ($archiveLink == trim(currentUrl(false), '/') . '/') {
-				return $postType;
-			}
-		}
+        // Reset internal offset if instreucted to.
+        if ($resetInternalOffset) {
+            $internalOffset = 0;
+        }
 
-		return null;
-	}
+        $args = array_merge([
+            'post_type'      => $this->postType,
+            'posts_per_page' => 20,
+            'offset'         => $internalOffset,
+            'post_status'    => 'publish',
+        ], $arguments);
 
+        // Change the internal offset
+        $this->internalOffset = $args['offset'];
 
-	/**
-	 * Get's posts related to this archive
-	 * @param  array $arguments
-	 * @return array
-	 */
-	public function getPosts (array $arguments = [], bool $resetInternalOffset = true) : array {
+        // Get the posts
+        $this->posts = get_posts($args);
 
-		// Reset internal offset if instreucted to.
-		if ($resetInternalOffset) $internalOffset = 0;
+        // Increment the post count
+        $this->internalPostCount += count($this->posts);
+        $this->hasLeftOvers = ($this->internalPostCount < $this->internalTotalCount);
 
-		$args = array_merge([
-			'post_type' => $this->postType,
-			'posts_per_page' => 20,
-			'offset' => $internalOffset,
-			'post_status' => 'publish',
-		], $arguments);
+        // Reformat the posts
+        $this->reformatPosts();
 
-		// Change the internal offset
-		$this->internalOffset = $args['offset'];
+        // Return posts
+        return $this->posts;
+    }
 
-		// Get the posts
-		$this->posts = get_posts($args);
+    /**
+     * Get's the next page of posts
+     * @param  int|integer $limit
+     * @return array
+     */
+    public function nextPosts(int $limit = 20): array
+    {
 
-		// Increment the post count
-		$this->internalPostCount += count($this->posts);
-		$this->hasLeftOvers	= ($this->internalPostCount < $this->internalTotalCount);
+        if ($this->hasLeftOvers) {
+            $args = [
+                'post_type'      => $this->postType,
+                'posts_per_page' => $limit,
+                'offset'         => $this->internalOffset,
+                'post_status'    => 'publish',
+            ];
 
+            // Get posts
+            $this->posts = get_posts($args);
 
-		// Reformat the posts
-		$this->reformatPosts();
+            // Increment the post count
+            $this->internalPostCount += count($this->posts);
+            $this->hasLeftOvers = ($this->internalPostCount < $this->internalTotalCount);
 
-		// Return posts
-		return $this->posts;
-	}
+            // Increment internal offset
+            $this->internalOffset += $limit;
 
-	/**
-	 * Get's the next page of posts
-	 * @param  int|integer $limit
-	 * @return array
-	 */
-	public function nextPosts (int $limit = 20) : array {
+            // Reformat the posts
+            $this->reformatPosts();
 
-		if ($this->hasLeftOvers) {
-			$args = [
-				'post_type' => $this->postType,
-				'posts_per_page' => $limit,
-				'offset' => $this->internalOffset,
-				'post_status' => 'publish',
-			];
+            // Return posts
+            return $this->posts;
+        }
 
-			// Get posts
-			$this->posts = get_posts($args);
+        return [];
+    }
 
-			// Increment the post count
-			$this->internalPostCount += count($this->posts);
-			$this->hasLeftOvers	= ($this->internalPostCount < $this->internalTotalCount);
+    /**
+     * Loop through and reformat posts
+     * @return void
+     */
+    private function reformatPosts(): void
+    {
 
-			// Increment internal offset
-			$this->internalOffset += $limit;
+        if (!empty($this->posts)) {
 
-			// Reformat the posts
-			$this->reformatPosts();
+            foreach ($this->posts as $key => $post) {
 
-			// Return posts
-			return $this->posts;
-		}
+                // Post type
+                $postType = $post->post_type;
 
-		return [];
-	}
+                // Class name
+                $className = ucfirst(studly_case($postType));
 
-	/**
-	 * Loop through and reformat posts
-	 * @return void
-	 */
-	private function reformatPosts() {
+                if (class_exists($className)) {
+                    $this->posts[$key] = new $className($post);
+                } else {
+                    $this->posts[$key] = new Page($post);
+                }
 
-		if (!empty($this->posts)) {
-
-			foreach ($this->posts as $key => $post) {
-				
-				// Post type
-				$postType = $post->post_type;
-
-				// Class name
-				$className = ucfirst(studly_case($postType));
-
-				if (class_exists($className))
-					$this->posts[$key] = new $className($post);
-				else
-					$this->posts[$key] = new Page($post);
-
-			}
-		}
-
-	}
-
+            }
+        }
+    }
 }
