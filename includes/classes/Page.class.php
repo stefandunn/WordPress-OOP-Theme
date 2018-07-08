@@ -6,7 +6,7 @@ Class Page {
 	public $original, $customFields, $blogInfo;
 
 	// ID of the object
-	public $id, $publishDate, $featureImages, $permalink, $content, $children, $searchSnippet;
+	public $id, $publishDate, $featureImages, $permalink, $children, $searchSnippet;
 	public $slides = null;
 
 	/**
@@ -37,8 +37,8 @@ Class Page {
 		// If ID is not null, get custom fields
 		if (!empty($this->id) && function_exists('get_fields')) $this->customFields = get_fields($this->id);
 
-		// Get content baded on language
-		@$this->content = $this->original->post_content;
+		// Santise the content
+		$this->sanitiseContent();
 
 		// Get feature image
 		if (!empty($this->id)) {
@@ -95,6 +95,49 @@ Class Page {
 	}
 
 	/**
+	 * Sanitises the content, applies filters and such..
+	 * @param  string $content
+	 * @return string
+	 */
+	public function sanitiseContent (string $content = '') {
+
+		// If not called statically
+		if (isset($this) && strlen($content) == 0 && isset($this->original->post_content))
+			$content = $this->original->post_content;
+
+		// Apply filters
+		$content = apply_filters('the_content', $content);
+
+		// Find media objects
+		$mediaContentArray = get_media_embedded_in_content($content, ['video', 'object', 'embed', 'iframe']);
+
+
+		// If media objects found, wrap them
+		if (!empty($mediaContentArray)) {
+
+			// Loop through
+			foreach ($mediaContentArray as $mediaHTML) {
+				
+				// String replace the html
+				$content = str_replace($mediaHTML, "<div class='video-wrapper'>{$mediaHTML}</div>", $content);
+			}
+		}
+
+		// Fix URL links (some anchor href attribute values may begin with www as opposed to http://www.)
+		$content = str_replace(["href=\"www.", "href='www."], ["href=\"//www.", "href='//www."], $content);
+
+		// If not called statically
+		if (isset($this)){
+			if (isset($this->original->post_content))
+				$this->original->post_content = $content;
+			$this->content = $content;
+		}
+
+		// Return
+		return $content;
+	}
+
+	/**
 	* Get's custom field by key with fallback
 	 * @param 	string $key
 	 * @param 	string|null $fallback
@@ -134,6 +177,10 @@ Class Page {
 	 * @return 	string
 	 */
 	public function getPublishDate ($format = 'Y-m-d H:i:s') {
+		// If no original data, return current date
+		if (!is_object($this->original))
+			return date($format);
+			
 		$this->publishDate = @mysql2date($format, $this->original->post_date);
 		return $this->publishDate;
 	}
@@ -191,42 +238,14 @@ Class Page {
 	}
 
 	/**
-	 * Displays the hero bar of the page
-	 * @return void
+	 * Returns the path for a feature image path
+	 * @param  string $size
+	 * @return string
 	 */
-	public function hero () {
-		if (empty($heroImages = $this->gcf('hero_images')))
-			echo '<section class="page-hero" style="background-image: url(\'' . $this->getLargestFeatureImage() . '\');"></section>';
-
-		// Else, let's display a carousel
-		else {
-			array_walk($heroImages, function(&$item) {
-				$item = $item['image']['sizes'];
-				$found = false;
-				// Loop through sizes (largest to smallest) and return if found
-				foreach (imageOrderByDevice('DESC') as $size){
-					if (!empty($item[$size])) {
-						$item = $item[$size];
-						$found = true;
-					}
-				}
-				
-				// Else, nothing found? Return full image
-				if (!$found)
-					$item = $item['full'];
-			});
-
-			// Add the feature image to front of array
-			array_unshift($heroImages, $this->getLargestFeatureImage());
-
-			// Construct the carousel
-			echo '<section class="page-hero">';
-			echo '<ul class="plain-list list-horizontal remove-spacing no-wrap spread-0 hero-slider">';
-			foreach (array_reverse($heroImages) as $imageURL)
-				echo '<li class="vtop" style="background-image: url(\'' . $imageURL . '\');"></li>';
-			echo "</ul>";
-			echo '</section>';
-		}
+	public function getFeatureImagePath ($size = 'full') : string {
+		$url = $this->getFeatureImage($size);
+		$path = WP_CONTENT_DIR . str_replace(content_url(), '', $url);
+		return $path;
 	}
 
 	/**
@@ -241,6 +260,8 @@ Class Page {
 			'post_type' => 'page',
 			'post_parent' => $this->id, 
 			'post_status' => 'publish',
+			'order' => 'ASC',
+			'orderby' => 'menu_order',
 		]);
 
 		if (!empty($this->children))
@@ -257,6 +278,14 @@ Class Page {
 	 */
 	public function makeSnippet ($numWords = 120, $elipsis = "...") {
 		return wp_trim_words($this->content, $numWords, "") . $elipsis;
+	}
+
+	/**
+	 * Returns this object as a JSON object
+	 * @return string
+	 */
+	public function returnAsJson () {
+		return json_encode((array)$this);
 	}
 
 }

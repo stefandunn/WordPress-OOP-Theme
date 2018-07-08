@@ -22,7 +22,7 @@ Class Archive {
 			$this->postType = $postType;
 
 		$this->name = "{$this->postType}-archive";
-		$this->permalink = get_post_type_archive_link($this->postType);
+		$this->permalink = get_post_type_archive_link($postType);
 
 		$this->internalTotalCount = count(get_posts([
 			'post_type' => $this->postType,
@@ -36,10 +36,6 @@ Class Archive {
 
 	}
 
-	/**
-	 * Determines the post type of this archive
-	 * @return void
-	 */
 	private function determinePostType () {
 		$availablePostTypes = get_post_types();
 		foreach ($availablePostTypes as $postType) {

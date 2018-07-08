@@ -9,7 +9,6 @@ if (!is_admin())
 	include "includes/alt-helpers.php";
 	include "includes/custom-functions.php";
 	include "includes/search-helpers.php";
-	include "includes/master-theme.php";
 	include "includes/script-and-styles.php";
 	include "includes/before-render.php";
 }

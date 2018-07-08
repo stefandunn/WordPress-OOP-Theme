@@ -1,5 +1,10 @@
 var mix = require('laravel-mix');
 
+// Enable source maps in development
+if (!mix.inProduction()) {
+    mix.webpackConfig({devtool: 'inline-source-map'})
+}
+
 mix.options({
 	postCss: [
 		require('autoprefixer')({
@@ -41,17 +46,16 @@ mix.options({
 // Compile BABEL ES2015
 mix.babel([
 	'./node_modules/jquery/dist/jquery.min.js',
-	'./js/in-viewport.js',
+	'./js/start.js',
 	'./js/helpers.js',
 	'./js/main.js',
 	'./js/_pages/*.js',
-	'./js/after-pages.js',
+	'./js/end.js',
 ], './js/src/main.min.js');
 
 // Compile SASS
 mix.sass('./css/main.scss', './css/src/main.min.css').options({
   processCssUrls: false
-});
-mix.sass('./css/tinymce.scss', './editor-style.css').options({
-  processCssUrls: false
-});
+}).sourceMaps();
+
+mix.copy('./css/src/main.min.css', './editor-style.css');
