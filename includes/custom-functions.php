@@ -159,11 +159,11 @@ function getTemplateName(): string
 
 /**
  * Rennder a partial page (without footer/header)
- * @param  stfring $pageName
+ * @param  string $pageName
  * @param  string  $template
  * @return void
  */
-function renderPartialPage(stfring $pageName, string $template): void
+function renderPartialPage(string $pageName, string $template): void
 {
     global $headerLoaded, $footerLoaded;
     $old_headerLoaded = $headerLoaded;
@@ -521,9 +521,9 @@ function fixCase(string $input, $style = 'title'): string
 
 /**
  * Get the logo as an image object
- * @return array
+ * @return string|null
  */
-function getLogo(): array
+function getLogo(): ?string
 {
     $customLogoId = get_theme_mod('custom_logo');
     $image        = wp_get_attachment_image_src($customLogoId, 'full');
@@ -682,9 +682,9 @@ function acfImageArraySizeInfo(array $imageArray, string $size = null): array
  * Get all blog info into array
  * @param     string $property
  * @param     mixed $fallback
- * @return     array
+ * @return    mixed
  */
-function getBlogProperty(string $property, $fallback = null): array
+function getBlogProperty(string $property, $fallback = null)
 {
     global $wp_version, $blogInfo;
 
