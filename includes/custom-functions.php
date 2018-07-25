@@ -817,26 +817,76 @@ function device(): string
     return 'desktop';
 }
 
+
+
 /**
- * Returns a $_GET variable parameter if available, otherwise returns the $fallback value
- * @param  string $variableName
+ * Get's a post variable using dot-notation for the $_POST key
+ * @param  string $name     $_POST key in dot-notation to denote multi-arrays
  * @param  mixed $fallback
  * @return mixed
  */
-function getVar(string $variableName, $fallback = null)
+function postVar($name, $fallback = null)
 {
-    return (isset($_GET[$variableName])) ? $_GET[$variableName] : $fallback;
+    // Get name parts
+    $nameParts = explode(".", $name);
+
+    // If name parts
+    if (!empty($nameParts)) {
+
+        // Get values from $_POST
+        $value = $_POST;
+
+        // Whilst there are name parts existing
+        while(count($nameParts) > 0) {
+
+            // Grab first part to get
+            $namePart = array_shift($nameParts);
+
+            if (isset($value[$namePart]))
+                $value = $value[$namePart];
+            else
+                return $fallback;
+        }
+
+        return $value;
+    }
+    else
+        return $fallback;
 }
 
 /**
- * Returns a $_POST variable parameter if available, otherwise returns the $fallback value
- * @param  string $variableName
+ * Get's a get variable using dot-notation for the $_GET key
+ * @param  string $name     $_GET key in dot-notation to denote multi-arrays
  * @param  mixed $fallback
  * @return mixed
  */
-function postVar(string $variableName, $fallback = null)
+function getVar($name, $fallback = null)
 {
-    return (isset($_POST[$variableName])) ? $_POST[$variableName] : $fallback;
+    // Get name parts
+    $nameParts = explode(".", $name);
+
+    // If name parts
+    if (!empty($nameParts)) {
+
+        // Get values from $_GET
+        $value = $_GET;
+
+        // Whilst there are name parts existing
+        while(count($nameParts) > 0) {
+
+            // Grab first part to get
+            $namePart = array_shift($nameParts);
+
+            if (isset($value[$namePart]))
+                $value = $value[$namePart];
+            else
+                return $fallback;
+        }
+
+        return $value;
+    }
+    else
+        return $fallback;
 }
 
 /**
